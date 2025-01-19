@@ -1,0 +1,20 @@
+# Protect against XSS attacks
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Only allow POST requests to contact.php
+<Files "contact.php">
+    Order Allow,Deny
+    Allow from all
+    <LimitExcept POST>
+        Deny from all
+    </LimitExcept>
+</Files>
+
+# Redirect all HTTP traffic to HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

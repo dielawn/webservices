@@ -1,0 +1,184 @@
+.lightning-paywall {
+    padding: 24px;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .lightning-paywall h3 {
+    font-size: 20px;
+    color: #1f2937;
+    margin-bottom: 24px;
+  }
+  
+  .qr-container {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .payment-details {
+    margin-bottom: 24px;
+  }
+  
+  .payment-details .instructions {
+    color: #4b5563;
+    margin-bottom: 12px;
+  }
+  
+  .payment-text {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+  
+  .payment-text p {
+    margin: 8px 0;
+  }
+  
+  /* Loading state */
+  .lightning-paywall.loading {
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px 20px;
+  }
+  
+  /* Error state */
+  .lightning-paywall.error {
+    color: #dc2626;
+    padding: 20px;
+  }
+  
+  .lightning-paywall.error button {
+    margin-top: 16px;
+  }
+  
+  /* Button styles */
+  .lightning-paywall .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 14px;
+  }
+  
+  .lightning-paywall .btn-secondary {
+    background-color: #f3f4f6;
+    color: #1f2937;
+  }
+  
+  .lightning-paywall .btn-secondary:hover {
+    background-color: #e5e7eb;
+  }
+  
+  /* Status indicator */
+  .payment-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    animation: pulse 1.5s infinite;
+  }
+  
+  /* Copy button for lightning invoice */
+  .copy-invoice {
+    background: none;
+    border: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .copy-invoice:hover {
+    background-color: #f9fafb;
+  }
+  
+  /* Animation for status dot */
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    .lightning-paywall {
+      padding: 16px;
+    }
+  
+    .qr-container {
+      padding: 12px;
+    }
+  
+    .qr-container svg {
+      width: 200px !important;
+      height: 200px !important;
+    }
+  }
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .lightning-paywall h3 {
+      color: #f3f4f6;
+    }
+  
+    .qr-container {
+      background: #1f2937;
+    }
+  
+    .payment-details .instructions {
+      color: #d1d5db;
+    }
+  
+    .payment-text {
+      color: #9ca3af;
+    }
+  
+    .lightning-paywall .btn-secondary {
+      background-color: #374151;
+      color: #f3f4f6;
+    }
+  
+    .lightning-paywall .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+  
+    .copy-invoice {
+      border-color: #374151;
+      color: #d1d5db;
+    }
+  
+    .copy-invoice:hover {
+      background-color: #374151;
+    }
+  }
