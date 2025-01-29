@@ -1,33 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import './LightningPaywall.css';
-import { paywallPrices } from './pricing_data';
+import './cart.css';
 
-const NostrLightningPaywall = ({ 
-  onPaymentSuccess, 
-  paymentType = 'registration', // 'registration', 'recovery', or 'contact'
-  apiBaseUrl = 'http://localhost:3000'
-}) => {
+const ProductInv = ({ onPaymentSuccess, cart = [], apiBaseUrl = 'http://localhost:3000' }) => {
   const [invoice, setInvoice] = useState(null);
   const [status, setStatus] = useState('initial');
   const [error, setError] = useState(null);
-  const [qrLoaded, setQrLoaded] = useState(false);
-
-  // Set amount based on payment type
-  const getAmount = () => {
-    const priceItem = paywallPrices.find(item => item.type === paymentType);
-    return priceItem ? priceItem.price : 1000; // Default to 1000 if type not found
-  };
-  // Get memo based on payment type
-  const getMemo = () => {
-    const priceItem = paywallPrices.find(item => item.type === paymentType);
-    return priceItem ? priceItem.description : 'Nostr Hosting Payment';
-  };
 
   // Create invoice when component mounts
   useEffect(() => {
-    createInvoice();
-  }, [paymentType]);
+    if (cart && cart.length > 0) {
+      createInvoice();
+    }
+  }, [cart]);
 
   // Check payment status
   useEffect(() => {
@@ -41,15 +26,16 @@ const NostrLightningPaywall = ({
   const createInvoice = async () => {
     try {
       setStatus('loading');
+      const cartString = cart.map(item => `${item.name} (${item.qty})`).join(', ');
+      
       const response = await fetch(`${apiBaseUrl}/create-invoice`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: getAmount(),
-          memo: getMemo(),
-          paymentType, // Send to backend to track payment purpose
+          amount: cart.reduce((total, item) => total + (item.price * item.qty), 0),
+          memo: `Purchase: ${cartString}`,
         })
       });
 
@@ -66,18 +52,6 @@ const NostrLightningPaywall = ({
     }
   };
 
-  useEffect(() => {
-    let timeout;
-    if (invoice && status === 'pending') {
-      // Cancel payment after invoice expires
-      timeout = setTimeout(() => {
-        setStatus('expired');
-        setError('Payment expired. Please try again.');
-      }, invoice.expiryMinutes * 60 * 1000);
-    }
-    return () => clearTimeout(timeout);
-  }, [invoice]);
-
   const checkPaymentStatus = async () => {
     if (!invoice) return;
 
@@ -88,41 +62,22 @@ const NostrLightningPaywall = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          invoiceId: invoice.id,
-          paymentType // Include payment type for verification
+          invoiceId: invoice.id
         })
       });
 
       const data = await response.json();
       if (data.success && data.paid) {
         setStatus('paid');
-        // Pass payment data to parent component
-        onPaymentSuccess({
-          invoiceId: invoice.id,
-          paymentHash: data.paymentHash,
-          paymentType,
-          amount: getAmount()
-        });
+        onPaymentSuccess();
       }
-    }  catch (err) {
-        if (retries > 0) {
-          setTimeout(() => checkPaymentStatus(retries - 1), 2000);
-        } else {
-          console.error('Error checking payment status:', err);
-        }
-      }
-  };
-
-  const getPaymentMessage = () => {
-    switch (paymentType) {
-      case 'registration':
-        return 'Pay to create your hosting account';
-      case 'recovery':
-        return 'Pay to recover your account';
-      default:
-        return 'Payment required';
+    } catch (err) {
+      console.error('Error checking payment status:', err);
     }
   };
+
+  // Calculate total amount
+  const totalAmount = cart.reduce((total, item) => total + (item.price * item.qty), 0);
 
   // Loading state
   if (status === 'loading') {
@@ -149,16 +104,25 @@ const NostrLightningPaywall = ({
   if (status === 'pending' && invoice) {
     return (
       <div className="lightning-paywall">
-        <h3>{getPaymentMessage()}</h3>
-        <p className="amount">Amount: {getAmount()} sats</p>
+        <h3>Pay {totalAmount} sats</h3>
+        <div className="cart-summary">
+          <ul>
+            {cart.map((item, index) => (
+              <li key={index}>
+                <span className="item-name">{item.name}</span>
+                <span className="item-qty">x{item.qty}</span>
+                <span className="item-price">{item.price * item.qty} sats</span>
+              </li>
+            ))}
+          </ul>
+          <div className="total">
+            <span>Total:</span>
+            <span>{totalAmount} sats</span>
+          </div>
+        </div>
         
         <div className="qr-container">
-            {!qrLoaded && <div className="qr-loading">Loading QR Code...</div>}
-            <QRCodeSVG 
-                value={invoice.paymentRequest} 
-                size={256} 
-                onLoad={() => setQrLoaded(true)}
-            />
+          <QRCodeSVG value={invoice.paymentRequest} size={256} />
         </div>
 
         <div className="payment-details">
@@ -173,11 +137,6 @@ const NostrLightningPaywall = ({
 
         <div className="payment-text">
           <p>Expires in: {invoice.expiryMinutes} minutes</p>
-          {paymentType === 'recovery' && (
-            <p className="note">
-              This payment is required after multiple failed recovery attempts.
-            </p>
-          )}
         </div>
       </div>
     );
@@ -186,4 +145,26 @@ const NostrLightningPaywall = ({
   return null;
 };
 
-export default NostrLightningPaywall;
+export default ProductInv;
+
+// *******              Example Usage           ********//
+
+// const MyCheckout = () => {
+//     const cart = [
+//       { name: "Product 1", price: 1000, qty: 2 },
+//       { name: "Product 2", price: 500, qty: 1 }
+//     ];
+  
+//     const handlePaymentSuccess = () => {
+//       // Handle successful payment
+//       console.log('Payment successful!');
+//     };
+  
+//     return (
+//       <ProductInv 
+//         cart={cart}
+//         onPaymentSuccess={handlePaymentSuccess}
+//         apiBaseUrl="http://localhost:3000"
+//       />
+//     );
+//   };

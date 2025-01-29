@@ -1,0 +1,143 @@
+.lightning-paywall {
+    padding: 24px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .cart-summary {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 16px 0 24px 0;
+  }
+  
+  .cart-summary ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 12px 0;
+  }
+  
+  .cart-summary li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .cart-summary li:last-child {
+    border-bottom: none;
+  }
+  
+  .item-name {
+    flex: 1;
+    color: #495057;
+  }
+  
+  .item-qty {
+    color: #6c757d;
+    margin: 0 12px;
+  }
+  
+  .item-price {
+    font-weight: 500;
+    color: #212529;
+    min-width: 80px;
+    text-align: right;
+  }
+  
+  .total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .lightning-paywall h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .qr-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .qr-container svg {
+    border: 4px solid white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .payment-details {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .instructions {
+    color: #666;
+    margin-bottom: 1rem;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-primary {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #2563eb;
+  }
+  
+  .btn-secondary {
+    background-color: #eab308;
+    color: white;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #ca8a04;
+  }
+  
+  .payment-text {
+    font-size: 0.875rem;
+    color: #666;
+    text-align: center;
+  }
+  
+  .payment-text p {
+    margin: 0.5rem 0;
+  }
+  
+  .lightning-paywall.error {
+    background-color: #fee2e2;
+  }
+  
+  .error p {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+  
+  .loading-message {
+    text-align: center;
+    color: #666;
+    padding: 16px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+  }

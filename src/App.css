@@ -6,7 +6,6 @@
   text-align: center;
 }
 
-
 /* Reset and base styles */
 * {
   margin: 0;
@@ -70,6 +69,19 @@ body {
 
 .nav-links {
   display: none;
+}
+
+ol > li {
+  padding-top: 20px;
+}
+
+ol {
+  text-align: start;
+  
+}
+ul {
+  padding-left: 20px;
+  list-style-type: none;
 }
 
 @media (min-width: 768px) {

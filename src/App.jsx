@@ -3,13 +3,34 @@ import { Monitor, Cloud, Code, Phone, Check, ChevronRight, Mail } from 'lucide-r
 import './App.css';
 import BitcoinPrice from './BtcPrice';
 import ContactModal from './ContactModal';
+import { productList, contactData } from './pricing_data';
 import { useState } from 'react';
-import { webHostingPkgs, webDesignPkgs, contactData } from './pricing_data';
+import NostrAuth from './NOSTRAuth';
+import NostrAuthFlow from '../api/authFlow';
+import NostrRegistration from './NostrRegistration';
+import NostrContactsImport from './NostrContactsImport';
 
 const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleLogin = (authInfo) => {
+    console.log('Logged in with public key:', authInfo.publicKey);
+    // Handle successful login
+  };
+
+  const handleError = (error) => {
+    console.error('Login error:', error);
+    // Handle error (show toast, alert, etc.)
+  };
+
+
   return (
     <div className="page-container">
+      <NostrAuth 
+        onLogin={handleLogin}
+        onError={handleError}
+      />
+     
       {/* Hero Section */}
       <header className="hero">
         <nav className="nav-container">
@@ -30,8 +51,8 @@ const App = () => {
         <div className="hero-content">
           <h1>Rocky Mountain Web Services</h1>
           <p>Elevate Your Digital Presence with Mountain-Strong Reliability</p>
-          <div className="hero-buttons">
-            <button className="btn btn-secondary">Learn More</button>
+          <div className="hero-">            
+            <p>Web Design & Hosting on a bitcoin standard</p>
           </div>
         </div>
       </header>
@@ -39,30 +60,24 @@ const App = () => {
        {/* Web Design Section */}
        <section id="wd-pricing" className="web-design-section">
         <h2>Web Design Packages</h2>
-        <div className="pricing-grid">
-         
-         {webDesignPkgs.map((pkg, index) => (
-            <div key={index} className="pricing-card">
-              <h3>{pkg.name}</h3>
-              {pkg.price === 'Custom' ? <p className='price'>{pkg.price} Pricing<span><br></br>*bitcoin preferred, 10% premium for $</span></p> : 
-              <>
-                <BitcoinPrice className="price" usdAmount={pkg.price} isReOccuring={pkg.isReOccuring}/> 
-                <p className='price'>${pkg.price}<span>/one-time <br></br>*bitcoin preferred, 10% premium for $</span></p>
-              </>
-              
-              }
-              
-              
-              <ul>
-                {pkg.features.map((feature, index) => (
-                  <li key={index}><Check className="check-icon" /> {feature}</li>
-                ))}
-              </ul>
-              <button className="btn btn-primary">Get Started</button>
-            </div>
-          ))}
-         
-         
+        <div className="pricing-grid">         
+         {productList.map((pkg, index) => (
+           pkg.category === 'Web Design' &&
+           <div key={index} className="pricing-card">
+           <h3>{pkg.name}</h3>
+           {pkg.price === 'Custom' ? <p className='price'>{pkg.price} Pricing<span><br></br></span></p> : 
+           <>
+             <BitcoinPrice className="price" usdAmount={pkg.price} isReOccuring={pkg.isReOccuring}/> 
+           </>
+           }             
+           <ul>
+             {pkg.features.map((feature, index) => (
+               <li key={index}><Check className="check-icon" /> {feature}</li>
+             ))}
+           </ul>
+           <button className="btn btn-primary">{pkg.price === 'Custom' ? 'Get Started' : 'Buy Now' }</button>
+         </div>
+          ))}         
         </div>
       </section>
 
@@ -73,18 +88,18 @@ const App = () => {
           
           <div className="feature-card">
             <Cloud className="feature-icon" />
-            <h3>99.9% Uptime</h3>
-            <p>Rest easy knowing your website is always available with our reliable hosting infrastructure.</p>
+            <h3>Minimal User Data Storage</h3>
+            <p>Rest easy knowing we can't loose your sensitive data because we don't have it!</p>
           </div>
           <div className="feature-card">
             <Monitor className="feature-icon" />
-            <h3>Custom Design & Web Hosting</h3>
-            <p>User-friendly human to help realize your digital vision.</p>
+            <h3>Self Service</h3>
+            <p>NOSTR Registration & login combined with Bitcoin Lightning payments.</p>
           </div>
           <div className="feature-card">
             <Code className="feature-icon" />
-            <h3>Expert Support</h3>
-            <p>24/7 technical support from our experienced human.</p>
+            <h3>Security</h3>
+            <p>Natural 2FA - Key & Domain access</p>
           </div>
         </div>
       </section>
@@ -93,13 +108,13 @@ const App = () => {
       <section id="wh-pricing" className="pricing-section">
         <h2>Hosting</h2>
         <div className="pricing-grid">
-        {webHostingPkgs.map((pkg, index) => (
+        {productList.map((pkg, index) => (
+            pkg.category === 'Hosting' && 
             <div key={index} className="pricing-card">
               <h3>{pkg.name}</h3>              
-              {pkg.price === 'Custom' ? <p className='price'>{pkg.price} Pricing<span><br></br>*bitcoin preferred, 10% premium for $</span></p> : 
+              {pkg.price === 'Custom' ? <p className='price'>{pkg.price} Pricing<span><br></br></span></p> : 
               <>
                 <BitcoinPrice className="price" usdAmount={pkg.price} isReOccuring={pkg.isReOccuring}/> 
-                <p className='price'>${pkg.price}<span>/one-time <br></br>*bitcoin preferred, 10% premium for $</span></p>
               </>
               
               }
@@ -109,7 +124,7 @@ const App = () => {
                 ))}
               </ul>
               <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-              Get Started
+             {pkg.price === 'Custom' ? 'Get Started' : 'Buy Now' }
             </button>
             </div>
           ))}
@@ -169,19 +184,17 @@ const App = () => {
           <div className="footer-section">
             <h4>Services</h4>
             <ul>
+            <li><a href="#">Web Design</a></li>
               <li><a href="#">Web Hosting</a></li>
               {/* <li><a href="#">Domain Names</a></li> */}
               <li><a href="#">SSL Certificates</a></li>
-              <li><a href="#">Web Design</a></li>
+              
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Newsletter</h4>
-            <p>Subscribe to our newsletter for updates and offers.</p>
-            <div className="newsletter-form">
-              <input type="email" placeholder="Enter your email" />
-              <button className="btn btn-primary">Subscribe</button>
-            </div>
+            <h4>Powered By:</h4>
+            <p>NOSTR</p>
+            <p>Strike</p>
           </div>
         </div>
         <div className="footer-bottom">

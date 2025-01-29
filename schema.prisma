@@ -1,0 +1,92 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  nostrPubKey    String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  cPanelAccounts CPanelAccount[]
+  payments       Payment[]
+
+  @@index([nostrPubKey])
+}
+
+model CPanelAccount {
+  id              String    @id @default(uuid())
+  username        String    @unique
+  domain          String
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLogin       DateTime?
+  expiresAt       DateTime  // When the service expires
+  autoRenew       Boolean   @default(false)
+  plan            Plan      @relation(fields: [planId], references: [id])
+  planId          String
+  status          AccountStatus @default(ACTIVE)
+  payments        Payment[]
+
+  @@index([customerId])
+  @@index([username])
+  @@index([expiresAt]) // Index for expiration queries
+}
+
+model Plan {
+  id              String    @id @default(uuid())
+  name            String
+  priceInSats     Int
+  durationInDays  Int
+  features        Json      // Store features as JSON
+  accounts        CPanelAccount[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  amount          Int       // Amount in satoshis
+  paymentType     PaymentType
+  paymentStatus   PaymentStatus @default(PENDING)
+  nostrEventId    String?   // For nostr payments
+  lightningInvoice String?  // For lightning payments
+  preimage        String?   // Payment proof
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  cPanelAccountId String
+  cPanelAccount   CPanelAccount @relation(fields: [cPanelAccountId], references: [id])
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime  // Payment request expiration
+  settledAt       DateTime?
+
+  @@index([nostrEventId])
+  @@index([lightningInvoice])
+  @@index([customerId])
+  @@index([paymentStatus])
+}
+
+enum PaymentType {
+  LIGHTNING
+  NOSTR
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+  FAILED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
