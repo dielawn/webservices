@@ -1,29 +1,66 @@
 import React, { useState } from 'react';
-import { SimplePool } from 'nostr-tools';
+import { verifyNip05, fetchProfile } from './nostr';
+import NostrAuth from './NOSTRAuth';
+import { nip05 } from 'nostr-tools';
+const baseURL = import.meta.env.VITE_SERVER_URL;
 
-const NostrRegistration = ({ onRegister, onError }) => {
-  const [step, setStep] = useState('verify'); // verify, details, confirm
+const NostrRegistration = ({ onRegister, onLogin, onError, userData, setUserData, profile, setProfile }) => {
+  const [step, setStep] = useState('verify');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState({
-    username: '',
-    domain: '',
-    package: '',  // cPanel package name
+    package: '',
     email: '',
     publicKey: ''
   });
 
+  // Check if user already exists and handle login
+  const checkExistingUser = async (publicKey) => {
+    try {
+      const response = await fetch(`${baseURL}api/auth/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ publicKey })
+      });
+
+      const result = await response.json();
+      
+      if (result.authenticated) {
+        await fetchProfile(publicKey, setProfile);
+        const userData = {
+          publicKey,
+          ...result.customer
+        };
+        setUserData(userData);
+        onLogin(userData);
+        setError('Account found! Logging you in...');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+      return false;
+    }
+  };
+
   const verifyNostr = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       if (!window.nostr) {
         throw new Error('Please install a Nostr extension');
       }
 
-      // Get public key from Nostr extension
       const publicKey = await window.nostr.getPublicKey();
       
-      // Create verification event
+      // Check if user already exists
+      const userExists = await checkExistingUser(publicKey);
+      if (userExists) return;
+
       const event = {
         kind: 27235,
         created_at: Math.floor(Date.now() / 1000),
@@ -32,13 +69,14 @@ const NostrRegistration = ({ onRegister, onError }) => {
         pubkey: publicKey
       };
 
-      // Get signature
       const signedEvent = await window.nostr.signEvent(event);
+      console.log('signed event', signedEvent);
 
       setFormData(prev => ({ ...prev, publicKey }));
       setStep('details');
 
     } catch (error) {
+      setError(error.message);
       onError(error.message);
     } finally {
       setLoading(false);
@@ -48,15 +86,13 @@ const NostrRegistration = ({ onRegister, onError }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      // Create signed event with account details
       const event = {
         kind: 27235,
         created_at: Math.floor(Date.now() / 1000),
         tags: [
-          ['domain', formData.domain],
-          ['username', formData.username],
           ['package', formData.package],
           ['email', formData.email]
         ],
@@ -66,8 +102,7 @@ const NostrRegistration = ({ onRegister, onError }) => {
 
       const signedEvent = await window.nostr.signEvent(event);
 
-      // Send to backend
-      const response = await fetch('/api/register', {
+      const response = await fetch(`${baseURL}api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -78,35 +113,44 @@ const NostrRegistration = ({ onRegister, onError }) => {
         })
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error('Registration failed');
+        if (result.error?.includes('already exists')) {
+          // Handle existing user
+          const userExists = await checkExistingUser(formData.publicKey);
+          if (userExists) return;
+        }
+        throw new Error(result.error || 'Registration failed');
       }
 
-      const result = await response.json();
       onRegister(result);
       setStep('confirm');
 
     } catch (error) {
+      setError(error.message);
       onError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Validate username format for cPanel
-  const validateUsername = (username) => {
-    return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(username) && username.length <= 16;
-  };
-
   return (
     <div className="registration-form">
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
       {step === 'verify' && (
-        <div>
+        <div className="verify-step">
           <h2>Verify your Nostr identity</h2>
           <p>First, let's connect your Nostr identity to your new hosting account.</p>
           <button 
             onClick={verifyNostr}
             disabled={loading}
+            className="nostr-button"
           >
             {loading ? 'Verifying...' : 'Connect with Nostr'}
           </button>
@@ -114,36 +158,18 @@ const NostrRegistration = ({ onRegister, onError }) => {
       )}
 
       {step === 'details' && (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="registration-details">
           <h2>Account Details</h2>
           
           <div className="form-group">
-            <label>Username:</label>
+            <label>Public Key:</label>
             <input
               type="text"
-              value={formData.username}
-              onChange={(e) => setFormData(prev => ({
-                ...prev,
-                username: e.target.value.toLowerCase()
-              }))}
-              pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
-              maxLength="16"
-              required
+              value={formData.publicKey}
+              readOnly
+              className="public-key-input"
             />
-            <small>Letters, numbers, and hyphens only. Max 16 characters.</small>
-          </div>
-
-          <div className="form-group">
-            <label>Domain:</label>
-            <input
-              type="text"
-              value={formData.domain}
-              onChange={(e) => setFormData(prev => ({
-                ...prev,
-                domain: e.target.value.toLowerCase()
-              }))}
-              required
-            />
+            <small>Hex nostr public key.</small>
           </div>
 
           <div className="form-group">
@@ -156,6 +182,7 @@ const NostrRegistration = ({ onRegister, onError }) => {
                 email: e.target.value
               }))}
               required
+              className="email-input"
             />
           </div>
 
@@ -168,28 +195,29 @@ const NostrRegistration = ({ onRegister, onError }) => {
                 package: e.target.value
               }))}
               required
+              className="package-select"
             >
               <option value="">Select a package</option>
               <option value="basic">Basic Hosting</option>
               <option value="premium">Premium Hosting</option>
-              {/* Add your actual packages here */}
             </select>
           </div>
 
           <button 
-            type="submit" 
-            disabled={loading || !validateUsername(formData.username)}
+            type="submit"
+            disabled={loading}
+            className="register-button"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Processing...' : 'Register'}
           </button>
         </form>
       )}
 
       {step === 'confirm' && (
-        <div>
+        <div className="confirmation">
           <h2>Account Created Successfully!</h2>
-          <p>Your hosting account has been created and linked to your Nostr identity.</p>
-          <p>You can now log in to cPanel using your Nostr key.</p>
+          <p>Your hosting account is now ready to use.</p>
+          <p>List cPanel accounts.</p>
         </div>
       )}
     </div>

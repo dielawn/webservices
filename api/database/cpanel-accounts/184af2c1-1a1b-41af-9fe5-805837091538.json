@@ -1,0 +1,13 @@
+{
+  "createdAt": "2025-02-01T12:48:37.511Z",
+  "updatedAt": "2025-02-01T12:48:37.511Z",
+  "id": "184af2c1-1a1b-41af-9fe5-805837091538",
+  "status": "ACTIVE",
+  "username": "user1",
+  "domain": "example.com",
+  "customerId": "c791e311-157e-44ae-9d5b-cfb13dddf9a4",
+  "resourceUsage": {
+    "diskUsage": 1000,
+    "bandwidth": 5000
+  }
+}

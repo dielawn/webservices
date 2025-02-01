@@ -295,4 +295,4 @@ const NostrContactsImport = () => {
     );
 };
 
-export default NostrContactsImport;
+export default NostrContactsImport; 

@@ -12,11 +12,17 @@ import NostrContactsImport from './NostrContactsImport';
 
 const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   const handleLogin = (authInfo) => {
     console.log('Logged in with public key:', authInfo.publicKey);
     // Handle successful login
   };
+
+  const handleRegister = (publicKey) => {
+    console.log('Registered:', publicKey)
+  }
 
   const handleError = (error) => {
     console.error('Login error:', error);
@@ -26,12 +32,26 @@ const App = () => {
 
   return (
     <div className="page-container">
+
+      <NostrRegistration  
+        userData={userData}  
+        profile={profile}
+        onError={handleError}
+        onRegister={handleRegister}
+        onLogin={handleLogin}
+        setUserData={setUserData}
+        setProfile={setProfile}
+      />
       <NostrAuth 
         onLogin={handleLogin}
         onError={handleError}
+        userData={userData}
+        setUserData={setUserData}
+        profile={profile}
+        setProfile={setProfile}
       />
      
-      {/* Hero Section */}
+      {/* Hero Section
       <header className="hero">
         <nav className="nav-container">
           <div className="nav-content">
@@ -55,9 +75,9 @@ const App = () => {
             <p>Web Design & Hosting on a bitcoin standard</p>
           </div>
         </div>
-      </header>
+      </header> */}
 
-       {/* Web Design Section */}
+       {/* Web Design Section
        <section id="wd-pricing" className="web-design-section">
         <h2>Web Design Packages</h2>
         <div className="pricing-grid">         
@@ -79,9 +99,9 @@ const App = () => {
          </div>
           ))}         
         </div>
-      </section>
+      </section> */}
 
-      {/* Features Section */}
+      {/* Features Section
       <section id="features" className="features-section">
         <h2>Why Choose Us?</h2>
         <div className="features-grid">
@@ -102,10 +122,10 @@ const App = () => {
             <p>Natural 2FA - Key & Domain access</p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Pricing Section */}
-      <section id="wh-pricing" className="pricing-section">
+      {/* <section id="wh-pricing" className="pricing-section">
         <h2>Hosting</h2>
         <div className="pricing-grid">
         {productList.map((pkg, index) => (
@@ -130,7 +150,7 @@ const App = () => {
           ))}
           
         </div>
-      </section>
+      </section> */}
 
      
 

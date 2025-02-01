@@ -1,33 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import './NOSTRAuth.css'
+import './NOSTRAuth.css';
 import { verifyNip05, fetchProfile } from './nostr';
 import { SIGNER_TYPES, isSignerAvailable, getPublicKey } from './signer';
+import { nip05, nip19 } from 'nostr-tools';
 
-const NostrAuth = ({ onLogin, onError }) => {
-    const [userData, setUserData] = useState(null);
-    const [profile, setProfile] = useState(null);
+
+const NostrAuth = ({ onLogin, onError, userData, setUserData, profile, setProfile }) => {
+    
     const [isVerified, setIsVerified] = useState(false);
-
-    // useEffect(() => {
-    //     checkSignerLogin(SIGNER_TYPES.ALBY) // default alby
-    // }, []);
-
+    const [npub, setNpub] = useState('');
+   
     useEffect(() => {
-        console.log('profile', profile, userData)
-        if (profile?.nip05 && userData?.publicKey) {
-            verifyNip05(profile.nip05, userData.publicKey)
-                .then(setIsVerified);
+        async function initializeAlby() {
+            try {
+                await window.alby.enable();
+                const nostr = window.alby.nostr;
+                await nostr.enable();
+               
+                const hexKey = await nostr.getPublicKey();
+                
+                const hexToNpub = (hex) => {
+                    try {
+                        return nip19.npubEncode(hex);
+                    } catch (error) {
+                        console.error('Error converting hex to npub:', error);
+                        return null;
+                    }
+                };
+        
+                const bech32 = hexToNpub(hexKey)                
+                setNpub(bech32)
+              
+            } catch (error) {
+                console.error('Error initializing Alby:', error);
+            }
         }
-    }, [profile, userData]);
+        initializeAlby()
+
+    }, []);
 
 
     const checkSignerLogin = async (signerType) => {
         try {
-            if (isSignerAvailable(signerType)) {
+            if (await isSignerAvailable(signerType)) {
                 const publicKey = await getPublicKey(signerType);
                 if (publicKey) {
-                    const profile = await fetchProfile(publicKey);
-                    setProfile(profile);
+                    await fetchProfile(publicKey, setProfile);
                     const newUserData = { publicKey, signerType };
                     setUserData(newUserData);
                     onLogin(newUserData);
@@ -42,17 +60,8 @@ const NostrAuth = ({ onLogin, onError }) => {
         }
     };
 
-    const checkAllSigners = async (customOrder) => {
-        const defaultOrder = [
-            SIGNER_TYPES.ALBY,
-            SIGNER_TYPES.NOS2X,
-            SIGNER_TYPES.NPROFILE,
-            SIGNER_TYPES.NOSTRI
-        ];
-        
-        const preferredOrder = customOrder || defaultOrder;
-        
-        for (const signerType of defaultOrder) {
+    const checkAllSigners = async (preferredOrder = [SIGNER_TYPES.ALBY, SIGNER_TYPES.NOS2X]) => {
+        for (const signerType of preferredOrder) {
             const success = await checkSignerLogin(signerType);
             if (success) return true;
         }
@@ -60,14 +69,10 @@ const NostrAuth = ({ onLogin, onError }) => {
     };
 
     const handleLogin = async () => {
-        const success = await checkAllSigners({
-            fetchProfile,
-            setUserData,
-            onLogin
-        });
-        
+        const success = await checkAllSigners();
         if (!success) {
             console.log('No supported signers found or login failed');
+            onError?.(new Error('No supported signers found or login failed'));
         }
     };
 
@@ -116,7 +121,7 @@ const NostrAuth = ({ onLogin, onError }) => {
                     <p className="profile-about">{profile.about}</p>
                 )}
                 <p className="profile-pubkey">
-                    Public Key: {userData.publicKey.slice(0, 8)}...
+                    {npub.slice(0, 8)}...{npub.slice(-8)}
                 </p>
             </div>
             <button 

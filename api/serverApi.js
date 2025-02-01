@@ -1,5 +1,3 @@
-import * as secp256k1 from '@noble/secp256k1';
-
 function generateChallenge() {
     return crypto.randomBytes(32).toString('hex');
     // Creates a random string like:

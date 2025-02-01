@@ -10,7 +10,7 @@ const verifyNip05 = async (nip05, pubkey) => {
     }
 };
 
-const fetchProfile = async (publicKey) => {
+const fetchProfile = async (publicKey, setProfile) => {
     const relays = [
         'wss://relay.damus.io',
         'wss://relay.nostr.band',
@@ -21,8 +21,12 @@ const fetchProfile = async (publicKey) => {
         try {
             const profile = await fetchProfileFromRelay(relayUrl, publicKey);
             if (profile) {
-                setProfile(profile);
-                break;
+                if (!setProfile) {
+                    return profile
+                } else {
+                    setProfile(profile);
+                    break;
+                }                
             }
         } catch (error) {
             console.error(`Failed to fetch from ${relayUrl}:`, error);
